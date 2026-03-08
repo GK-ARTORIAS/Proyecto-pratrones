@@ -3,6 +3,5 @@
   "/trading/page": "app/trading/page.js",
   "/auctions/page": "app/auctions/page.js",
   "/iot/page": "app/iot/page.js",
-  "/predictions/page": "app/predictions/page.js",
-  "/settings/page": "app/settings/page.js"
+  "/predictions/page": "app/predictions/page.js"
 }

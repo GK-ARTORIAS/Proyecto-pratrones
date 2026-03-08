@@ -11,6 +11,7 @@ import {
     Settings,
     LogOut,
     Activity,
+    BarChart2,
 } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -18,6 +19,7 @@ const navItems = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
     { label: "Trading", href: "/trading", icon: Zap },
     { label: "Subastas", href: "/auctions", icon: Gavel },
+    { label: "Mercado", href: "/market", icon: BarChart2 },
     { label: "Dispositivos", href: "/iot", icon: Cpu },
     { label: "Predicción", href: "/predictions", icon: TrendingUp },
 ];
