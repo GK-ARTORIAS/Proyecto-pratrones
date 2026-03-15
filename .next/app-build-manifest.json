@@ -16,20 +16,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/trading/page.js"
     ],
-    "/auctions/page": [
+    "/predictions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/auctions/page.js"
+      "static/chunks/app/predictions/page.js"
     ],
     "/iot/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/iot/page.js"
     ],
-    "/predictions/page": [
+    "/auctions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/predictions/page.js"
+      "static/chunks/app/auctions/page.js"
+    ],
+    "/market/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/market/page.js"
     ]
   }
 }
