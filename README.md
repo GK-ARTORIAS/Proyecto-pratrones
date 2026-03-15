@@ -4,4 +4,4 @@ Todos los cambios realizados semanalmente en el proyecto se encuentran almacenad
 
 Para una explicación detallada del funcionamiento del proyecto, consulta el siguiente video:
 
-▶️ **Ver video explicativo:** (link del video aquí)
+▶️ **Ver video explicativo:** ()
