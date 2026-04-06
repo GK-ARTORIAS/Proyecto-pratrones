@@ -11,30 +11,35 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/trading/page": [
+    "/iot/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/trading/page.js"
+      "static/chunks/app/iot/page.js"
     ],
-    "/auctions/page": [
+    "/adapters/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/auctions/page.js"
+      "static/chunks/app/adapters/page.js"
+    ],
+    "/predictions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/predictions/page.js"
     ],
     "/market/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/market/page.js"
     ],
-    "/iot/page": [
+    "/auctions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/iot/page.js"
+      "static/chunks/app/auctions/page.js"
     ],
-    "/predictions/page": [
+    "/trading/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/predictions/page.js"
+      "static/chunks/app/trading/page.js"
     ]
   }
 }
