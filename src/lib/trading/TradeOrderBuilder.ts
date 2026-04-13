@@ -81,6 +81,9 @@ export class TradeOrderBuildError extends Error {
 
 // ── Builder ───────────────────────────────────────────────────
 
+// Contador monotónico: garantiza IDs únicos aunque build() se llame en el mismo ms
+let _buildSeq = 0;
+
 export class TradeOrderBuilder {
   // Estado interno — valores por defecto
   private _type: OrderType | null          = null;
@@ -197,7 +200,7 @@ export class TradeOrderBuilder {
     const totalValueUsd = parseFloat((this._amountKwh * this._pricePerKwh).toFixed(4));
 
     return {
-      id:         `ORD-${Date.now().toString(36).toUpperCase()}`,
+      id:         `ORD-${Date.now().toString(36).toUpperCase()}-${(++_buildSeq).toString(36).toUpperCase()}`,
       createdAt:  new Date(),
       type:       this._type,
       amountKwh:  this._amountKwh,

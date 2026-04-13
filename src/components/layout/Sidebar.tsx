@@ -13,17 +13,19 @@ import {
     Activity,
     BarChart2,
     Plug,
+    Bell,
 } from "lucide-react";
 import { clsx } from "clsx";
 
 const navItems = [
-    { label: "Dashboard",   href: "/",         icon: LayoutDashboard },
-    { label: "Trading",     href: "/trading",   icon: Zap },
-    { label: "Subastas",    href: "/auctions",  icon: Gavel },
-    { label: "Mercado",     href: "/market",    icon: BarChart2 },
-    { label: "Dispositivos",href: "/iot",       icon: Cpu },
-    { label: "Predicción",  href: "/predictions",icon: TrendingUp },
-    { label: "Adaptadores", href: "/adapters",  icon: Plug },
+    { label: "Dashboard",      href: "/",              icon: LayoutDashboard },
+    { label: "Trading",        href: "/trading",        icon: Zap },
+    { label: "Subastas",       href: "/auctions",       icon: Gavel },
+    { label: "Mercado",        href: "/market",         icon: BarChart2 },
+    { label: "Dispositivos",   href: "/iot",            icon: Cpu },
+    { label: "Predicción",     href: "/predictions",    icon: TrendingUp },
+    { label: "Adaptadores",    href: "/adapters",       icon: Plug },
+    { label: "Notificaciones", href: "/notifications",  icon: Bell },
 ];
 
 const bottomItems = [
