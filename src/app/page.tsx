@@ -1,259 +1,265 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-    AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-} from "recharts";
-import {
-    Zap, TrendingUp, ArrowDownCircle, ArrowUpCircle,
-    Cpu, Gavel, Activity, ChevronRight,
+    LayoutDashboard, Zap, Cpu, TrendingDown, TrendingUp,
+    Minus, RefreshCw, Copy, Activity, Layers, ChevronRight,
+    Circle, CheckCircle, AlertTriangle, XCircle,
 } from "lucide-react";
+import { getEnergyFacade, type MarketSummary, type PortfolioStatus }
+    from "@/lib/facade/EnergyTradingFacade";
+import { createDemoPortfolio, EnergyGroup, EnergyDevice, type IEnergyNode }
+    from "@/lib/iot/EnergyComposite";
+import { ensureDemoProfile } from "@/lib/supabase/demoUser";
 
-// ── Datos simulados ────────────────────────────────────────
-const generateChartData = () =>
-    Array.from({ length: 24 }, (_, i) => ({
-        hour: `${String(i).padStart(2, "0")}:00`,
-        produccion: parseFloat((Math.random() * 5 + (i >= 6 && i <= 18 ? 3 : 0.2)).toFixed(2)),
-        consumo: parseFloat((Math.random() * 3 + ((i >= 7 && i <= 9) || (i >= 18 && i <= 22) ? 2.5 : 0.8)).toFixed(2)),
-    }));
+// ── Tipos locales ─────────────────────────────────────────────
+type Template = ReturnType<ReturnType<typeof getEnergyFacade>["getAvailableTemplates"]>[0];
 
-const recentOrders = [
-    { id: "ORD-0041", type: "VENTA", amount: "12.5 kWh", price: "0.124 USD/kWh", status: "OPEN", source: "Solar" },
-    { id: "ORD-0040", type: "COMPRA", amount: "8.0 kWh", price: "0.118 USD/kWh", status: "MATCHED", source: "Eólico" },
-    { id: "ORD-0039", type: "VENTA", amount: "5.2 kWh", price: "0.131 USD/kWh", status: "OPEN", source: "Solar" },
-    { id: "ORD-0038", type: "COMPRA", amount: "20.0 kWh", price: "0.110 USD/kWh", status: "EXPIRED", source: "Red" },
-];
+const STATUS_ICON = {
+    ONLINE:  <CheckCircle  size={12} className="text-green-400" />,
+    PARTIAL: <AlertTriangle size={12} className="text-yellow-400" />,
+    OFFLINE: <XCircle      size={12} className="text-red-400" />,
+};
 
-interface StatCardProps {
-    label: string;
-    value: string;
-    sub: string;
-    icon: React.ElementType;
-    color: string;
-    trend?: string;
-    trendUp?: boolean;
-}
+const TREND_ICON = {
+    UP:     <TrendingUp   size={12} className="text-red-400" />,
+    DOWN:   <TrendingDown size={12} className="text-green-400" />,
+    STABLE: <Minus        size={12} className="text-slate-500" />,
+};
 
-function StatCard({ label, value, sub, icon: Icon, color, trend, trendUp }: StatCardProps) {
+// ── DeviceTree: renderiza el Composite ───────────────────────
+function DeviceTree({ node, depth = 0 }: { node: IEnergyNode; depth?: number }) {
+    const [open, setOpen] = useState(depth < 2);
+    const isGroup = node instanceof EnergyGroup;
+
     return (
-        <div className="card card-hover card-glow flex flex-col gap-4 animate-slide-up">
-            <div className="flex items-center justify-between">
-                <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: `${color}15`, border: `1px solid ${color}25` }}
-                >
-                    <Icon className="w-5 h-5" style={{ color }} />
-                </div>
-                {trend && (
-                    <span
-                        className={`text-xs font-semibold px-2 py-1 rounded-lg ${trendUp
-                                ? "bg-green-500/10 text-green-400"
-                                : "bg-red-500/10 text-red-400"
-                            }`}
-                    >
-                        {trend}
-                    </span>
+        <div className={depth > 0 ? "ml-4 border-l border-white/[0.06] pl-3" : ""}>
+            <button
+                onClick={() => isGroup && setOpen((o) => !o)}
+                className={`w-full text-left flex items-center gap-2 py-1.5 px-2 rounded-lg
+                    hover:bg-white/[0.04] transition-colors group ${isGroup ? "cursor-pointer" : "cursor-default"}`}
+            >
+                {isGroup && (
+                    <ChevronRight size={12} className={`text-slate-600 transition-transform ${open ? "rotate-90" : ""}`} />
                 )}
-            </div>
-            <div>
-                <p className="stat-value">{value}</p>
-                <p className="stat-label">{label}</p>
-                <p className="text-xs text-slate-500 mt-1">{sub}</p>
-            </div>
+                {!isGroup && <Circle size={8} className="text-slate-700 ml-1 shrink-0" />}
+                {STATUS_ICON[node.getStatus()]}
+                <span className="text-xs text-white font-medium flex-1">{node.getName()}</span>
+                <span className="text-[10px] text-slate-500">{node.getTotalKwh().toFixed(1)} kWh</span>
+                {node.getPeakPowerKw() > 0 && (
+                    <span className="text-[10px] text-slate-600">{node.getPeakPowerKw()} kW</span>
+                )}
+                {isGroup && <span className="text-[10px] text-slate-700">({node.getChildCount()} nodos)</span>}
+            </button>
+            {isGroup && open && (
+                <div className="mt-0.5">
+                    {(node as EnergyGroup).getChildren().map((child) => (
+                        <DeviceTree key={child.getName()} node={child} depth={depth + 1} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
 
+// ── Página ────────────────────────────────────────────────────
 export default function DashboardPage() {
-    const [chartData, setChartData] = useState(generateChartData());
-    const [liveKwh, setLiveKwh] = useState(3.42);
+    const facade    = getEnergyFacade();
+    const portfolio = createDemoPortfolio();
 
-    // Simulación de datos en tiempo real
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setLiveKwh((prev) => parseFloat((prev + (Math.random() * 0.4 - 0.2)).toFixed(2)));
-        }, 2000);
-        return () => clearInterval(interval);
+    const [market,     setMarket]     = useState<MarketSummary | null>(null);
+    const [portStatus, setPortStatus] = useState<PortfolioStatus | null>(null);
+    const [templates,  setTemplates]  = useState<Template[]>([]);
+    const [loading,    setLoading]    = useState(true);
+    const [cloneMsg,   setCloneMsg]   = useState<string | null>(null);
+    const [cloningId,  setCloningId]  = useState<string | null>(null);
+
+    const loadAll = useCallback(async () => {
+        setLoading(true);
+        const [mktRes, portRes] = await Promise.all([
+            facade.getMarketSummary(),
+            facade.getPortfolioStatus(),
+        ]);
+        if (mktRes.ok  && mktRes.data)  setMarket(mktRes.data);
+        if (portRes.ok && portRes.data) setPortStatus(portRes.data);
+        setTemplates(facade.getAvailableTemplates());
+        setLoading(false);
     }, []);
+
+    useEffect(() => {
+        ensureDemoProfile();
+        loadAll();
+        const interval = setInterval(loadAll, 15000);
+        return () => clearInterval(interval);
+    }, [loadAll]);
+
+    const handleClone = async (templateName: string) => {
+        setCloningId(templateName);
+        const result = await facade.cloneTemplateAndPublish(templateName);
+        setCloningId(null);
+        setCloneMsg(result.ok
+            ? `✅ Orden publicada desde "${templateName}" (ID: ${result.data})`
+            : `❌ Error: ${result.error}`
+        );
+        setTimeout(() => setCloneMsg(null), 5000);
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">
-            {/* ── Header ───────────────────────────────────────── */}
+            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight">
-                        Dashboard
-                    </h1>
-                    <p className="text-slate-400 text-sm mt-0.5">
-                        Bienvenido — aquí tienes tu resumen energético en tiempo real.
+                    <h1 className="text-2xl font-extrabold text-white tracking-tight">Dashboard</h1>
+                    <p className="section-subtitle">
+                        <span className="font-semibold text-slate-300">Facade</span> + <span className="font-semibold text-slate-300">Composite</span> — vista unificada del sistema
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="status-dot status-dot-online" />
-                    <span className="text-xs font-semibold text-green-400">
-                        Produciendo {liveKwh} kW
-                    </span>
-                </div>
+                <button onClick={loadAll} className="btn-secondary flex items-center gap-2">
+                    <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Actualizar
+                </button>
             </div>
 
-            {/* ── Stats ────────────────────────────────────────── */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    label="Producción hoy"
-                    value="47.3 kWh"
-                    sub="Paneles solares activos"
-                    icon={Zap}
-                    color="#f59e0b"
-                    trend="+12.4%"
-                    trendUp
-                />
-                <StatCard
-                    label="Consumo hoy"
-                    value="31.8 kWh"
-                    sub="Promedio normal del hogar"
-                    icon={Activity}
-                    color="#3b82f6"
-                    trend="-3.1%"
-                    trendUp
-                />
-                <StatCard
-                    label="Excedente disponible"
-                    value="15.5 kWh"
-                    sub="Listo para vender"
-                    icon={ArrowUpCircle}
-                    color="#22c55e"
-                    trend="+8.2%"
-                    trendUp
-                />
-                <StatCard
-                    label="Ingresos este mes"
-                    value="$ 28.40"
-                    sub="De ventas de excedente"
-                    icon={TrendingUp}
-                    color="#8b5cf6"
-                    trend="+19%"
-                    trendUp
-                />
+            {/* ── KPIs del Portafolio (Facade) ──────────────────── */}
+            <div className="grid grid-cols-5 gap-3">
+                {[
+                    { label: "Órdenes abiertas",  value: portStatus?.openOrders   ?? "–", icon: <Zap size={14} />,           color: "text-blue-400"   },
+                    { label: "Órdenes ejecutadas", value: portStatus?.filledOrders ?? "–", icon: <CheckCircle size={14} />,   color: "text-green-400"  },
+                    { label: "Dispositivos",        value: portStatus?.totalDevices ?? "–", icon: <Cpu size={14} />,           color: "text-brand-400"  },
+                    { label: "Online",              value: portStatus?.onlineDevices ?? "–", icon: <Activity size={14} />,     color: "text-green-400"  },
+                    { label: "Valor total USD",     value: portStatus ? `$${portStatus.totalValueUsd.toFixed(2)}` : "–",
+                        icon: <LayoutDashboard size={14} />, color: "text-yellow-400" },
+                ].map((kpi) => (
+                    <div key={kpi.label} className="card text-center">
+                        <div className={`flex justify-center mb-2 ${kpi.color}`}>{kpi.icon}</div>
+                        <p className="text-xl font-extrabold text-white">{kpi.value}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{kpi.label}</p>
+                    </div>
+                ))}
             </div>
 
-            {/* ── Chart + Quick stats ───────────────────────────── */}
-            <div className="grid grid-cols-3 gap-4">
-                {/* Gráfico de producción vs consumo */}
-                <div className="col-span-2 card">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="section-title">Producción vs Consumo</h2>
-                            <p className="section-subtitle">Último ciclo de 24 horas</p>
+            <div className="grid grid-cols-2 gap-5">
+                <div className="space-y-4">
+                    {/* ── Mercado via Facade ──────────────────────── */}
+                    <div className="card">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Layers size={14} className="text-brand-400" />
+                            <h2 className="section-title">Resumen de mercado — Facade</h2>
                         </div>
-                        <div className="flex items-center gap-4 text-xs">
-                            <div className="flex items-center gap-1.5">
-                                <span className="w-3 h-0.5 rounded-full bg-[#22c55e] inline-block" />
-                                <span className="text-slate-400">Producción</span>
+                        <p className="text-[10px] text-slate-600 mb-3">
+                            <code className="bg-white/[0.05] px-1 py-0.5 rounded">facade.getMarketSummary()</code> orquesta 3 Adapters + Decorator + Notificación en una llamada
+                        </p>
+                        {loading ? (
+                            <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-12 shimmer rounded-lg" />)}</div>
+                        ) : market ? (
+                            <div className="space-y-2">
+                                {market.quotes.map((q) => (
+                                    <div key={q.provider} className={`flex items-center gap-3 px-3 py-2 rounded-lg border
+                                        ${q.provider === market.cheapest
+                                            ? "border-green-500/20 bg-green-500/[0.04]"
+                                            : "border-white/[0.05] bg-white/[0.02]"}`}>
+                                        <div className="flex-1">
+                                            <span className="text-xs font-bold text-white">{q.provider}</span>
+                                            {q.provider === market.cheapest && (
+                                                <span className="ml-2 badge badge-green text-[9px]">Más barato</span>
+                                            )}
+                                            <p className="text-[10px] text-slate-500">{q.source} · {q.validForMins}min</p>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            {TREND_ICON[q.trend as keyof typeof TREND_ICON]}
+                                            <span className="text-sm font-extrabold text-white">${q.pricePerKwh.toFixed(4)}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between text-[10px] pt-2 border-t border-white/[0.05]">
+                                    <span className="text-slate-500">Precio promedio</span>
+                                    <span className="text-white font-bold">${market.avgPrice.toFixed(4)} USD/kWh</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="w-3 h-0.5 rounded-full bg-[#3b82f6] inline-block" />
-                                <span className="text-slate-400">Consumo</span>
-                            </div>
-                        </div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={220}>
-                        <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="gradProd" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.25} />
-                                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="gradCons" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.2} />
-                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "#475569" }} tickLine={false} axisLine={false} interval={3} />
-                            <YAxis tick={{ fontSize: 10, fill: "#475569" }} tickLine={false} axisLine={false} />
-                            <Tooltip
-                                contentStyle={{ background: "#1e2028", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }}
-                                labelStyle={{ color: "#94a3b8" }}
-                            />
-                            <Area type="monotone" dataKey="produccion" stroke="#22c55e" strokeWidth={2} fill="url(#gradProd)" name="Producción (kW)" dot={false} />
-                            <Area type="monotone" dataKey="consumo" stroke="#3b82f6" strokeWidth={2} fill="url(#gradCons)" name="Consumo (kW)" dot={false} />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Balance energético */}
-                <div className="card flex flex-col gap-5">
-                    <div>
-                        <h2 className="section-title">Balance energético</h2>
-                        <p className="section-subtitle">Estado actual</p>
+                        ) : <p className="text-sm text-slate-500">Sin datos</p>}
                     </div>
 
-                    {[
-                        { label: "Dispositivos online", value: "4", icon: Cpu, color: "#10b981" },
-                        { label: "Órdenes activas", value: "3", icon: Zap, color: "#f59e0b" },
-                        { label: "Subastas activas", value: "2", icon: Gavel, color: "#8b5cf6" },
-                        { label: "kWh en excedente", value: "15.5", icon: ArrowUpCircle, color: "#22c55e" },
-                        { label: "kWh importados", value: "4.2", icon: ArrowDownCircle, color: "#3b82f6" },
-                    ].map(({ label, value, icon: Icon, color }) => (
-                        <div key={label} className="flex items-center gap-3">
-                            <div
-                                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                                style={{ background: `${color}15`, border: `1px solid ${color}20` }}
-                            >
-                                <Icon size={16} style={{ color }} />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-slate-500">{label}</p>
-                                <p className="text-sm font-bold text-white">{value}</p>
-                            </div>
+                    {/* ── Templates via Facade + Prototype ─────────── */}
+                    {cloneMsg && (
+                        <div className={`px-3 py-2 rounded-xl text-xs border font-medium ${
+                            cloneMsg.startsWith("✅") ? "bg-green-500/10 border-green-500/20 text-green-300"
+                                                      : "bg-red-500/10 border-red-500/20 text-red-300"}`}>
+                            {cloneMsg}
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── Recent orders ────────────────────────────────── */}
-            <div className="card">
-                <div className="flex items-center justify-between mb-5">
-                    <div>
-                        <h2 className="section-title">Órdenes recientes</h2>
-                        <p className="section-subtitle">Últimas transacciones</p>
+                    )}
+                    <div className="card">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Copy size={14} className="text-brand-400" />
+                            <h2 className="section-title">Plantillas — Facade + Prototype</h2>
+                        </div>
+                        <p className="text-[10px] text-slate-600 mb-3">
+                            <code className="bg-white/[0.05] px-1 py-0.5 rounded">facade.cloneTemplateAndPublish()</code> clona, valida y persiste en Supabase
+                        </p>
+                        <div className="space-y-2">
+                            {templates.map((t) => (
+                                <div key={t.name} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-white truncate">{t.name}</p>
+                                        <p className="text-[10px] text-slate-500">{t.order.amountKwh} kWh · ${t.order.pricePerKwh} · usado {t.usageCount}×</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleClone(t.name)}
+                                        disabled={!!cloningId}
+                                        className="btn-primary text-[11px] px-3 py-1.5 flex items-center gap-1 shrink-0"
+                                    >
+                                        <Copy size={10} />
+                                        {cloningId === t.name ? "…" : "Clonar"}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <button className="flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 font-semibold transition-colors">
-                        Ver todo <ChevronRight size={14} />
-                    </button>
                 </div>
-                <div className="space-y-2">
-                    {recentOrders.map((order) => (
-                        <div
-                            key={order.id}
-                            className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all"
-                        >
-                            <div
-                                className={`badge ${order.type === "VENTA" ? "badge-green" : "badge-blue"
-                                    }`}
-                            >
-                                {order.type}
-                            </div>
-                            <span className="text-xs font-mono text-slate-500">{order.id}</span>
-                            <span className="text-sm font-semibold text-white">{order.amount}</span>
-                            <span className="text-sm text-slate-400">{order.price}</span>
-                            <span className="text-xs text-slate-500">{order.source}</span>
-                            <div className="ml-auto">
-                                <span
-                                    className={`badge ${order.status === "OPEN"
-                                            ? "badge-green"
-                                            : order.status === "MATCHED"
-                                                ? "badge-blue"
-                                                : "badge-red"
-                                        }`}
-                                >
-                                    {order.status}
-                                </span>
-                            </div>
+
+                {/* ── Portfolio Composite ─────────────────────────── */}
+                <div className="card">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <Cpu size={14} className="text-brand-400" />
+                            <h2 className="section-title">Árbol de dispositivos — Composite</h2>
                         </div>
-                    ))}
+                        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                            {STATUS_ICON.ONLINE}  <span>Online</span>
+                            {STATUS_ICON.PARTIAL} <span>Parcial</span>
+                            {STATUS_ICON.OFFLINE} <span>Offline</span>
+                        </div>
+                    </div>
+                    <p className="text-[10px] text-slate-600 mb-3">
+                        <code className="bg-white/[0.05] px-1 py-0.5 rounded">portfolio.getTotalKwh()</code> agrega recursivamente sin importar cuántos niveles hay
+                    </p>
+
+                    {/* Stats del Composite */}
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                        {[
+                            { label: "Total kWh",     value: portfolio.getTotalKwh().toFixed(1) },
+                            { label: "Pico kW",       value: portfolio.getPeakPowerKw().toString() },
+                            { label: "Nodos totales", value: portfolio.getChildCount().toString() },
+                        ].map((s) => (
+                            <div key={s.label} className="bg-white/[0.03] rounded-lg px-2 py-2 text-center">
+                                <p className="text-sm font-bold text-white">{s.value}</p>
+                                <p className="text-[10px] text-slate-500">{s.label}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Árbol interactivo */}
+                    <div className="bg-white/[0.02] rounded-xl p-3 max-h-80 overflow-y-auto">
+                        <DeviceTree node={portfolio} depth={0} />
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-white/[0.05] text-[10px] text-slate-600 leading-relaxed">
+                        <span className="text-brand-300 font-semibold">Composite</span>: el cliente llama
+                        <code className="bg-white/[0.05] mx-1 px-1 py-0.5 rounded">portfolio.getTotalKwh()</code>
+                        y obtiene la suma de 7 dispositivos en 3 niveles — sin conocer la estructura interna.
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+
+// _Facade _Composite

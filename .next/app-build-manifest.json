@@ -11,15 +11,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/notifications/page": [
+    "/trading/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/notifications/page.js"
+      "static/chunks/app/trading/page.js"
     ],
-    "/adapters/page": [
+    "/auctions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/adapters/page.js"
+      "static/chunks/app/auctions/page.js"
     ]
   }
 }

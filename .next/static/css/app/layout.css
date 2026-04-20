@@ -762,24 +762,6 @@ video {
   color: rgb(148 163 184 / var(--tw-text-opacity, 1));
 }
 /* Stat card value */
-.stat-value{
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
-}
-.stat-label{
-  margin-top: 0.25rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  --tw-text-opacity: 1;
-  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
-}
 .pointer-events-none{
   pointer-events: none;
 }
@@ -819,6 +801,10 @@ video {
 .col-span-2{
   grid-column: span 2 / span 2;
 }
+.mx-1{
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
 .mb-0\.5{
   margin-bottom: 0.125rem;
 }
@@ -849,14 +835,14 @@ video {
 .ml-2{
   margin-left: 0.5rem;
 }
+.ml-4{
+  margin-left: 1rem;
+}
 .ml-auto{
   margin-left: auto;
 }
 .mt-0\.5{
   margin-top: 0.125rem;
-}
-.mt-1{
-  margin-top: 0.25rem;
 }
 .mt-3{
   margin-top: 0.75rem;
@@ -873,17 +859,11 @@ video {
 .block{
   display: block;
 }
-.inline-block{
-  display: inline-block;
-}
 .flex{
   display: flex;
 }
 .grid{
   display: grid;
-}
-.h-0\.5{
-  height: 0.125rem;
 }
 .h-1\.5{
   height: 0.375rem;
@@ -893,6 +873,9 @@ video {
 }
 .h-11{
   height: 2.75rem;
+}
+.h-12{
+  height: 3rem;
 }
 .h-14{
   height: 3.5rem;
@@ -990,6 +973,10 @@ video {
 .shrink-0{
   flex-shrink: 0;
 }
+.rotate-90{
+  --tw-rotate: 90deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
 @keyframes fadeIn{
 
   0%{
@@ -1027,6 +1014,9 @@ video {
 .animate-spin{
   animation: spin 1s linear infinite;
 }
+.cursor-default{
+  cursor: default;
+}
 .cursor-pointer{
   cursor: pointer;
 }
@@ -1041,6 +1031,9 @@ video {
 }
 .grid-cols-4{
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.grid-cols-5{
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .flex-col{
   flex-direction: column;
@@ -1141,6 +1134,9 @@ video {
 .border-b{
   border-bottom-width: 1px;
 }
+.border-l{
+  border-left-width: 1px;
+}
 .border-r{
   border-right-width: 1px;
 }
@@ -1193,6 +1189,9 @@ video {
 .border-white\/\[0\.05\]{
   border-color: rgb(255 255 255 / 0.05);
 }
+.border-white\/\[0\.06\]{
+  border-color: rgb(255 255 255 / 0.06);
+}
 .border-white\/\[0\.07\]{
   border-color: rgb(255 255 255 / 0.07);
 }
@@ -1212,14 +1211,6 @@ video {
 .bg-\[\#16181f\]{
   --tw-bg-opacity: 1;
   background-color: rgb(22 24 31 / var(--tw-bg-opacity, 1));
-}
-.bg-\[\#22c55e\]{
-  --tw-bg-opacity: 1;
-  background-color: rgb(34 197 94 / var(--tw-bg-opacity, 1));
-}
-.bg-\[\#3b82f6\]{
-  --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
 }
 .bg-black\/60{
   background-color: rgb(0 0 0 / 0.6);
@@ -1294,6 +1285,9 @@ video {
 }
 .bg-white\/\[0\.04\]{
   background-color: rgb(255 255 255 / 0.04);
+}
+.bg-white\/\[0\.05\]{
+  background-color: rgb(255 255 255 / 0.05);
 }
 .bg-white\/\[0\.06\]{
   background-color: rgb(255 255 255 / 0.06);
@@ -1405,6 +1399,9 @@ video {
 .pl-10{
   padding-left: 2.5rem;
 }
+.pl-3{
+  padding-left: 0.75rem;
+}
 .pr-4{
   padding-right: 1rem;
 }
@@ -1439,6 +1436,9 @@ video {
 }
 .text-\[11px\]{
   font-size: 11px;
+}
+.text-\[9px\]{
+  font-size: 9px;
 }
 .text-base{
   font-size: 1rem;
@@ -1615,6 +1615,11 @@ video {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+.transition-transform{
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
 
 /* ── CSS Variables (Design Tokens) ─────────────────────── */
 :root {
@@ -1728,12 +1733,11 @@ body {
 .hover\:bg-red-500\/10:hover{
   background-color: rgb(239 68 68 / 0.1);
 }
+.hover\:bg-white\/\[0\.04\]:hover{
+  background-color: rgb(255 255 255 / 0.04);
+}
 .hover\:bg-white\/\[0\.06\]:hover{
   background-color: rgb(255 255 255 / 0.06);
-}
-.hover\:text-brand-300:hover{
-  --tw-text-opacity: 1;
-  color: rgb(134 239 172 / var(--tw-text-opacity, 1));
 }
 .hover\:text-red-400:hover{
   --tw-text-opacity: 1;
@@ -1766,10 +1770,6 @@ body {
 
   .lg\:grid-cols-3{
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .lg\:grid-cols-4{
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
