@@ -20,6 +20,8 @@ export interface AppConfig {
     iotServiceUrl: string;
 }
 
+const PRIVATE_TOKEN = Symbol("ConfigManagerPrivateToken");
+
 export class ConfigManager {
     // ── Instancia única (Singleton) ──────────────────────────
     private static instance: ConfigManager | null = null;
@@ -27,7 +29,10 @@ export class ConfigManager {
     private readonly config: AppConfig;
 
     // Constructor privado: nadie puede hacer `new ConfigManager()`
-    private constructor() {
+    private constructor(token: symbol) {
+        if (token !== PRIVATE_TOKEN) {
+            throw new Error("Use ConfigManager.getInstance() instead of new.");
+        }
         this.config = {
             supabaseUrl: this.requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
             supabaseAnonKey: this.requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
@@ -47,9 +52,9 @@ export class ConfigManager {
      */
     public static getInstance(): ConfigManager {
         if (!ConfigManager.instance) {
-            ConfigManager.instance = new ConfigManager();
+            ConfigManager.instance = new (ConfigManager as any)(PRIVATE_TOKEN);
         }
-        return ConfigManager.instance;
+        return ConfigManager.instance!;
     }
 
     /** Retorna un valor de configuración tipado */
