@@ -87,11 +87,11 @@ describe("DeviceAdapterFactory — Patrón Factory Method", () => {
                 expect(adapter.isConnected()).toBe(true);
 
                 const reading = await adapter.readData();
-                expect(reading.powerKw).toBeGreaterThanOrEqual(0);
 
                 // BATTERY_STORAGE puede tener potencia negativa (descarga)
                 if (deviceType !== "BATTERY_STORAGE") {
-                    // Para los demás tipos, al menos en algunos casos produce positivo
+                    expect(reading.powerKw).toBeGreaterThanOrEqual(0);
+                } else {
                     expect(typeof reading.powerKw).toBe("number");
                 }
 

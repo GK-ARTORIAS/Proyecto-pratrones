@@ -258,7 +258,7 @@ export class DeviceServiceProxy implements IDeviceService {
         }
         // Rate limiting
         if (!this._checkRateLimit("addDevice")) {
-            return { ok: false, error: "Límite de operaciones alcanzado — espera un momento" };
+            return { ok: false, error: "Rate limit: Límite de operaciones alcanzado — espera un momento" };
         }
 
         // Invalidar caché de dispositivos

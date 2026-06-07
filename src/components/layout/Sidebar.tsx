@@ -14,6 +14,7 @@ import {
     BarChart2,
     Plug,
     Bell,
+    Blocks,
 } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -26,6 +27,7 @@ const navItems = [
     { label: "Predicción",     href: "/predictions",    icon: TrendingUp },
     { label: "Adaptadores",    href: "/adapters",       icon: Plug },
     { label: "Notificaciones", href: "/notifications",  icon: Bell },
+    { label: "Patrones",       href: "/patterns",       icon: Blocks },
 ];
 
 const bottomItems = [

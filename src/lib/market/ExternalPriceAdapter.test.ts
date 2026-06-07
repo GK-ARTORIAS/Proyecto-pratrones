@@ -109,9 +109,9 @@ describe("OctopusAdapter — Adapter Pattern", () => {
 
   test("convierte peniques/kWh a USD/kWh (×0.0126)", async () => {
     const quote = await adapter.getCurrentQuote();
-    // 18-30 peniques × 1.05 VAT × 0.0126 ≈ 0.024-0.040 USD/kWh
+    // 18-30 peniques × 1.05 VAT × 0.0126 ≈ 0.24-0.40 USD/kWh
     expect(quote.pricePerKwh).toBeGreaterThan(0.01);
-    expect(quote.pricePerKwh).toBeLessThan(0.06);
+    expect(quote.pricePerKwh).toBeLessThan(0.5);
   });
 
   test("usa intervalos de 30 minutos", async () => {

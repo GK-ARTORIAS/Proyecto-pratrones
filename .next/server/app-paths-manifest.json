@@ -1,5 +1,9 @@
 {
+  "/page": "app/page.js",
+  "/market/page": "app/market/page.js",
+  "/patterns/page": "app/patterns/page.js",
+  "/trading/page": "app/trading/page.js",
+  "/auctions/page": "app/auctions/page.js",
   "/iot/page": "app/iot/page.js",
-  "/notifications/page": "app/notifications/page.js",
-  "/trading/page": "app/trading/page.js"
+  "/predictions/page": "app/predictions/page.js"
 }
